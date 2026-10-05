@@ -1,36 +1,63 @@
 package com.example.pertemuan1.ui.screen
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.ShoppingCart
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import com.example.pertemuan1.R
-import com.example.pertemuan1.data.dummy.DummyData
 import com.example.pertemuan1.data.model.Category
 import com.example.pertemuan1.data.model.Product
-import kotlinx.coroutines.delay
+import com.example.pertemuan1.ui.viewmodel.ProductUiState
+import com.example.pertemuan1.ui.viewmodel.ProductViewModel
+import com.example.pertemuan1.util.JualanConstants.BASE_URL
 
 @Composable
 fun ProductItemCard(
@@ -41,7 +68,9 @@ fun ProductItemCard(
         modifier = Modifier
             .padding(8.dp)
             .fillMaxWidth()
-            .clickable { onClick() },
+            .clickable {
+                onClick()
+            },
         elevation = CardDefaults.cardElevation(
             defaultElevation = 4.dp
         ),
@@ -52,22 +81,27 @@ fun ProductItemCard(
         Column(
             modifier = Modifier.padding(12.dp)
         ) {
-            val imageRes =
-                if (product.img == "dummy_product")
+
+            val imageModel: Any =
+                if (product.img == "dummy_product") {
                     R.drawable.dummy_product
-                else
-                    R.drawable.dummy_product
+                } else {
+                    BASE_URL + "img/${product.img}"
+                }
 
             Box(
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Image(
-                    painter = painterResource(id = imageRes),
+
+                AsyncImage(
+                    model = imageModel,
                     contentDescription = product.name,
                     modifier = Modifier
                         .fillMaxWidth()
                         .aspectRatio(1f)
-                        .clip(RoundedCornerShape(size = 8.dp))
+                        .clip(
+                            RoundedCornerShape(8.dp)
+                        )
                         .background(
                             androidx.compose.ui.graphics.Color.White
                         ),
@@ -79,7 +113,9 @@ fun ProductItemCard(
                         modifier = Modifier
                             .align(Alignment.TopEnd)
                             .padding(4.dp)
-                            .clip(RoundedCornerShape(4.dp))
+                            .clip(
+                                RoundedCornerShape(4.dp)
+                            )
                             .background(
                                 MaterialTheme.colorScheme.secondary
                             )
@@ -129,16 +165,18 @@ fun CategoryItem(
     onClick: () -> Unit
 ) {
     val containerColor =
-        if (isSelected)
+        if (isSelected) {
             MaterialTheme.colorScheme.primary
-        else
+        } else {
             MaterialTheme.colorScheme.surfaceVariant
+        }
 
     val contentColor =
-        if (isSelected)
+        if (isSelected) {
             MaterialTheme.colorScheme.onPrimary
-        else
+        } else {
             MaterialTheme.colorScheme.onSurfaceVariant
+        }
 
     Card(
         modifier = Modifier.clickable {
@@ -163,56 +201,21 @@ fun CategoryItem(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DaftarProdukScreen(
-    navController: NavController? = null
+    navController: NavController? = null,
+    viewModel: ProductViewModel
 ) {
     var selectedCategoryId by rememberSaveable {
-        mutableStateOf(
-            DummyData.categories.firstOrNull()?.id
-        )
+        mutableStateOf<Int?>(null)
     }
+
+    val uiState by viewModel.uiState.collectAsState()
 
     var searchQuery by rememberSaveable {
         mutableStateOf("")
     }
 
-    var isLoading by remember {
+    var expanded by remember {
         mutableStateOf(false)
-    }
-
-    var filteredProducts by remember {
-        mutableStateOf<List<Product>>(emptyList())
-    }
-
-    LaunchedEffect(
-        key1 = selectedCategoryId,
-        key2 = searchQuery
-    ) {
-        isLoading = true
-
-        delay(1000)
-
-        val filteredByCategory =
-            if (selectedCategoryId == null) {
-                DummyData.products
-            } else {
-                DummyData.products.filter {
-                    it.category?.id == selectedCategoryId
-                }
-            }
-
-        filteredProducts =
-            if (searchQuery.isBlank()) {
-                filteredByCategory
-            } else {
-                filteredByCategory.filter {
-                    it.name.contains(
-                        other = searchQuery,
-                        ignoreCase = true
-                    )
-                }
-            }
-
-        isLoading = false
     }
 
     Scaffold(
@@ -227,6 +230,7 @@ fun DaftarProdukScreen(
                     Text("Daftar Produk UMKM")
                 },
                 actions = {
+
                     IconButton(
                         onClick = {}
                     ) {
@@ -236,9 +240,11 @@ fun DaftarProdukScreen(
                         )
                     }
 
-                    var expanded by remember { mutableStateOf(false) }
-
-                    IconButton(onClick = { expanded = true }) {
+                    IconButton(
+                        onClick = {
+                            expanded = true
+                        }
+                    ) {
                         Icon(
                             imageVector = Icons.Default.MoreVert,
                             contentDescription = "Menu",
@@ -248,13 +254,19 @@ fun DaftarProdukScreen(
 
                     DropdownMenu(
                         expanded = expanded,
-                        onDismissRequest = { expanded = false }
+                        onDismissRequest = {
+                            expanded = false
+                        }
                     ) {
                         DropdownMenuItem(
-                            text = { Text("Hubungi Kami") },
+                            text = {
+                                Text("Hubungi Kami")
+                            },
                             onClick = {
                                 expanded = false
-                                navController?.navigate("hubungi_kami")
+                                navController?.navigate(
+                                    "hubungi_kami"
+                                )
                             },
                             leadingIcon = {
                                 Icon(
@@ -269,33 +281,95 @@ fun DaftarProdukScreen(
         }
     ) { paddingValues ->
 
-        StatelessDaftarProduct(
-            categories = DummyData.categories,
-            selectedCategoryId = selectedCategoryId,
-            onCategorySelected = {
-                selectedCategoryId = it
-            },
-            searchQuery = searchQuery,
-            onSearchQueryChange = {
-                searchQuery = it
-            },
-            isLoading = isLoading,
-            products = filteredProducts,
-            onProductClick = { product ->
-                navController?.navigate(
-                    "detail/${product.id}"
-                )
-            },
-            onContactUsClick = {
-                navController?.navigate(
-                    "hubungi_kami"
-                )
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
+
+            when (val state = uiState) {
+
+                is ProductUiState.Loading -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                }
+
+                is ProductUiState.Error -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Error: ${state.message}",
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                }
+
+                is ProductUiState.Success -> {
+
+                    if (
+                        selectedCategoryId == null &&
+                        state.categories.isNotEmpty()
+                    ) {
+                        selectedCategoryId =
+                            state.categories.first().id
+                    }
+
+                    val filteredByCategory =
+                        if (selectedCategoryId != null) {
+                            state.products.filter {
+                                it.category_id == selectedCategoryId
+                            }
+                        } else {
+                            state.products
+                        }
+
+                    val filteredProducts =
+                        if (searchQuery.isBlank()) {
+                            filteredByCategory
+                        } else {
+                            filteredByCategory.filter {
+                                it.name.contains(
+                                    searchQuery,
+                                    ignoreCase = true
+                                )
+                            }
+                        }
+
+                    StatelessDaftarProduct(
+                        categories = state.categories,
+                        selectedCategoryId = selectedCategoryId,
+                        onCategorySelected = {
+                            selectedCategoryId = it
+                        },
+                        searchQuery = searchQuery,
+                        onSearchQueryChange = {
+                            searchQuery = it
+                        },
+                        isLoading = false,
+                        products = filteredProducts,
+                        onProductClick = { product ->
+                            navController?.navigate(
+                                "detail/${product.id}"
+                            )
+                        },
+                        onContactUsClick = {
+                            navController?.navigate(
+                                "hubungi_kami"
+                            )
+                        }
+                    )
+                }
             }
-        )
+        }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StatelessDaftarProduct(
     categories: List<Category>,
@@ -313,6 +387,7 @@ fun StatelessDaftarProduct(
             .fillMaxSize()
             .padding(16.dp)
     ) {
+
         OutlinedTextField(
             value = searchQuery,
             onValueChange = onSearchQueryChange,
@@ -331,14 +406,15 @@ fun StatelessDaftarProduct(
         Text(
             text = "Kategori Produk",
             style = MaterialTheme.typography.titleLarge,
-            modifier = Modifier.padding(all = 16.dp)
+            modifier = Modifier.padding(16.dp)
         )
 
         LazyRow(
             contentPadding = PaddingValues(
                 horizontal = 16.dp
             ),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement =
+                Arrangement.spacedBy(8.dp)
         ) {
             items(categories) { category ->
                 CategoryItem(
@@ -366,12 +442,14 @@ fun StatelessDaftarProduct(
         )
 
         if (isLoading) {
+
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
                 Column(
-                    horizontalAlignment = Alignment.CenterHorizontally
+                    horizontalAlignment =
+                        Alignment.CenterHorizontally
                 ) {
                     CircularProgressIndicator()
 
@@ -382,18 +460,23 @@ fun StatelessDaftarProduct(
                     Text("Mencari data...")
                 }
             }
+
         } else {
+
             if (products.isEmpty()) {
+
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
                     Text("Produk tidak ditemukan.")
                 }
+
             } else {
+
                 LazyVerticalGrid(
-                    columns = GridCells.Fixed(count = 2),
-                    contentPadding = PaddingValues(all = 16.dp),
+                    columns = GridCells.Fixed(2),
+                    contentPadding = PaddingValues(16.dp),
                     horizontalArrangement =
                         Arrangement.spacedBy(16.dp),
                     verticalArrangement =
@@ -401,11 +484,13 @@ fun StatelessDaftarProduct(
                     modifier = Modifier.fillMaxSize()
                 ) {
                     items(products) { product ->
+
                         ProductItemCard(
-                            product = product
-                        ) {
-                            onProductClick(product)
-                        }
+                            product = product,
+                            onClick = {
+                                onProductClick(product)
+                            }
+                        )
                     }
                 }
             }
