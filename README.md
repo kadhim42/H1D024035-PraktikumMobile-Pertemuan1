@@ -43,3 +43,11 @@ Pertemuan ketiga membuka wawasan tentang pengembangan aplikasi mobile yang lebih
 
 **Kesimpulan Praktikum:**
 Pertemuan keempat mempelajari penerapan stateless dan stateful serta fitur pencarian, kategori, loading, dan navigasi pada aplikasi mobile.
+
+##📝 Tugas Pertemuan 5
+**Tanggal**: Selasa, 29 September 2026
+
+![Tugas Pertemuan 5](./tugas5.jpg)
+
+**Kesimpulan Praktikum:**
+Pertemuan keempat mempelajari penerapan Retrofit untuk menampilkan, memfilter, serta merinci daftar produk dari API.
