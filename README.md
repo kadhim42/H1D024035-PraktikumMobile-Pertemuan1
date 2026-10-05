@@ -50,4 +50,4 @@ Pertemuan keempat mempelajari penerapan stateless dan stateful serta fitur penca
 ![Tugas Pertemuan 5](./tugas5.jpg)
 
 **Kesimpulan Praktikum:**
-Pertemuan keempat mempelajari penerapan Retrofit untuk menampilkan, memfilter, serta merinci daftar produk dari API.
+Pertemuan kelima mempelajari penerapan Retrofit untuk menampilkan, memfilter, serta merinci daftar produk dari API.
